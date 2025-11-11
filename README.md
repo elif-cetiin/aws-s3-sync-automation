@@ -14,9 +14,12 @@ Python script that uploads files from a local folder to AWS S3 using **Boto3**, 
 
 1. Install dependencies
 ```sh
+
 pip install boto3
 
+# Configure aws configure
 aws configure
+
 # Enter:
 
 AWS Access Key
