@@ -1,49 +1,57 @@
 # AWS S3 Sync Automation
 
-Local folder → AWS S3 incremental sync automation  
-Python script that uploads files from a local folder to AWS S3 using **Boto3**, with:
+A Python automation script that syncs files from a **local folder to AWS S3**, using checksum comparison to upload only changed files.
 
-- Incremental upload (only changed files are uploaded)
-- Checksum verification (ensures data integrity)
-- Detailed logging (local log file + print to console)
+# Features
+- Incremental uploads (modified files only)
+- Checksum verification (data integrity)
+- Logs (console + file)
 - Multithreaded upload (faster sync)
 
 ---
 
 # How to Run
 
-1. Install dependencies
+# 1. Install dependency
 ```sh
-
 pip install boto3
+```
 
-# Configure aws configure
+# 2. Configure AWS CLI
+```sh
 aws configure
+```
 
-# Enter:
+Enter:
+- AWS Access Key
+- AWS Secret Key
+- Region (example: `us-east-1`)
 
-AWS Access Key
-AWS Secret Key
-Region
-
-# Run the script
-
+# 3. Run the script
+```sh
 python src/s3_sync.py --local-path ./my-folder --bucket my-bucket --prefix backups/project --profile default
+```
+
+---
 
 # Project Structure
-
+```
 aws-s3-sync-automation/
 │
 ├── src/
-│   └── s3_sync.py     # Main sync script
+│   └── s3_sync.py
 ├── README.md
 ├── LICENSE
 └── .gitignore
+```
+
+---
 
 # Requirements
+- Python 3.10+
+- AWS CLI configured using `aws configure`
+- IAM user with S3 upload permissions
 
-Python 3.10+
-AWS CLI configured (aws configure)
-IAM user with S3 upload permissions
+---
 
 Author: Elif Cetin
