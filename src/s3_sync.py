@@ -1,11 +1,22 @@
 #!/usr/bin/env python3
 """
-s3_sync.py
-Simple, safe sync script from local folder -> S3 with checksum-based uploads.
+AWS S3 Sync Automation
 
-Usage:
-  python src/s3_sync.py --local-path ./my-folder --bucket my-bucket --prefix backups/2025-09-01 --profile default --dry-run
+Production-grade command-line utility for synchronizing a local directory with
+an Amazon S3 bucket using checksum-based change detection.
+
+Features:
+- Recursively scans a local folder and maps files to S3 object keys
+- Uses MD5 checksum comparison to detect changes and skip already-synced files
+- Supports concurrent multipart uploads via boto3 TransferConfig
+- Optional dry-run mode to preview planned actions without modifying S3
+- Optional deletion of remote objects that no longer exist locally
+- Generates a JSON summary report for each execution
+- Structured logging with timestamps and status information
+
+Refer to README.md for installation instructions and CLI usage.
 """
+
 import os
 import sys
 import argparse
@@ -29,6 +40,7 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 logger.setLevel(logging.INFO)
 
+
 def md5_for_file(path, chunk_size=8192):
     h = hashlib.md5()
     with open(path, "rb") as f:
@@ -39,6 +51,7 @@ def md5_for_file(path, chunk_size=8192):
             h.update(chunk)
     return h.hexdigest()
 
+
 def s3_object_md5(head_obj):
     meta = head_obj.get('Metadata', {})
     if 'md5' in meta:
@@ -48,6 +61,7 @@ def s3_object_md5(head_obj):
         return etag
     return None
 
+
 def iter_local_files(local_root, ignore_hidden=True):
     root = Path(local_root)
     for p in root.rglob("*"):
@@ -56,8 +70,10 @@ def iter_local_files(local_root, ignore_hidden=True):
                 continue
             yield p
 
+
 class S3Sync:
-    def __init__(self, bucket, prefix="", profile=None, region=None, concurrency=DEFAULT_CONCURRENCY, dry_run=False):
+    def __init__(self, bucket, prefix="", profile=None, region=None,
+                 concurrency=DEFAULT_CONCURRENCY, dry_run=False):
         session_args = {}
         if profile:
             session_args['profile_name'] = profile
@@ -114,7 +130,7 @@ class S3Sync:
             return ("skip", path, key)
 
         if self.dry_run:
-            logger.info("[DRY-RUN] Would upload: %s -> %s", path, key)
+            logger.info("[DRY-RUN] Planned upload: %s -> %s", path, key)
             return ("dry-run", path, key)
 
         content_type, _ = mimetypes.guess_type(str(path))
@@ -143,7 +159,7 @@ class S3Sync:
         deleted = []
         for key in to_delete:
             if self.dry_run:
-                logger.info("[DRY-RUN] Would delete s3://%s/%s", self.bucket.name, key)
+                logger.info("[DRY-RUN] Planned delete s3://%s/%s", self.bucket.name, key)
                 deleted.append(key)
                 continue
             try:
@@ -176,7 +192,8 @@ class S3Sync:
         errors = [r for r in results if r[0] == 'error']
         dry = [r for r in results if r[0] == 'dry-run']
 
-        logger.info("Summary: uploaded=%d, skipped=%d, errors=%d, dry=%d", len(uploaded), len(skipped), len(errors), len(dry))
+        logger.info("Summary: uploaded=%d, skipped=%d, errors=%d, dry=%d",
+                    len(uploaded), len(skipped), len(errors), len(dry))
 
         deleted = []
         if delete:
@@ -190,26 +207,37 @@ class S3Sync:
             "dry": dry
         }
 
+
 def main():
-    parser = argparse.ArgumentParser(description="Sync local folder to S3 with checksum detection")
-    parser.add_argument("--local-path", "-l", required=True, help="Local directory to upload")
-    parser.add_argument("--bucket", "-b", required=True, help="S3 bucket name")
-    parser.add_argument("--prefix", "-p", default="", help="S3 prefix (folder) under the bucket")
-    parser.add_argument("--profile", help="AWS profile (from ~/.aws/credentials)")
-    parser.add_argument("--region", help="AWS region")
+    parser = argparse.ArgumentParser(
+        description=("Synchronize a local directory with an Amazon S3 bucket "
+                     "using checksum-based change detection for integrity and performance.")
+    )
+    parser.add_argument("--local-path", "-l", required=True)
+    parser.add_argument("--bucket", "-b", required=True)
+    parser.add_argument("--prefix", "-p", default="")
+    parser.add_argument("--profile")
+    parser.add_argument("--region")
     parser.add_argument("--concurrency", type=int, default=DEFAULT_CONCURRENCY)
-    parser.add_argument("--dry-run", action="store_true", help="Don't upload, just report")
-    parser.add_argument("--delete", action="store_true", help="Delete remote keys not present locally")
-    parser.add_argument("--verbose", action="store_true", help="Verbose logging")
+    parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--delete", action="store_true")
+    parser.add_argument("--verbose", action="store_true")
     args = parser.parse_args()
 
     if args.verbose:
         logger.setLevel(logging.DEBUG)
 
-    syncer = S3Sync(bucket=args.bucket, prefix=args.prefix, profile=args.profile,
-                    region=args.region, concurrency=args.concurrency, dry_run=args.dry_run)
+    syncer = S3Sync(
+        bucket=args.bucket,
+        prefix=args.prefix,
+        profile=args.profile,
+        region=args.region,
+        concurrency=args.concurrency,
+        dry_run=args.dry_run
+    )
 
     result = syncer.sync(args.local_path, delete=args.delete)
+
     import json, datetime
     stamp = datetime.datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
     logfile = Path(args.local_path) / f".s3_sync_{stamp}.json"
@@ -226,7 +254,9 @@ def main():
                 "deleted": result["deleted"]
             }
         }, wf, indent=2)
-    logger.info("Wrote run log to %s", logfile)
+
+    logger.info("Run summary written to %s", logfile)
+
 
 if __name__ == "__main__":
     main()
