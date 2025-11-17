@@ -23,6 +23,23 @@ A production-grade command-line utility that synchronizes a local directory with
 
 ---
 
+
+## Project Structure
+
+```
+aws-s3-sync-automation/
+│
+├── src/
+│   └── s3_sync.py
+├── logs/
+│   └── log_2025-11-16.json
+├── .gitignore
+├── LICENSE
+└── README.md
+```
+
+---
+
 ## Installation
 
 ### Install AWS CLI
