@@ -1,57 +1,45 @@
 # AWS S3 Sync Automation
 
-A Python automation script that syncs files from a **local folder to AWS S3**, using checksum comparison to upload only changed files.
-
-# Features
-- Incremental uploads (modified files only)
-- Checksum verification (data integrity)
-- Logs (console + file)
-- Multithreaded upload (faster sync)
+A production-grade command-line utility that synchronizes a local directory with an Amazon S3 bucket using checksum-based change detection, enabling efficient, secure, and reliable backup operations.
 
 ---
 
-# How to Run
+## Features
 
-# 1. Install dependency
-```sh
-pip install boto3
-```
-
-# 2. Configure AWS CLI
-```sh
-aws configure
-```
-
-Enter:
-- AWS Access Key
-- AWS Secret Key
-- Region (example: `us-east-1`)
-
-# 3. Run the script
-```sh
-python src/s3_sync.py --local-path ./my-folder --bucket my-bucket --prefix backups/project --profile default
-```
+- Incremental uploads, uploads only modified files using MD5 checksum comparison  
+- Checksum verification, ensures data integrity between local and S3 objects  
+- Concurrent multipart uploads, faster transfer using multithreaded upload  
+- Dry-run mode, preview actions without modifying S3  
+- Automatic cleanup, optional removal of remote files not present locally  
+- Structured logging, console and JSON summary output of every run  
 
 ---
 
-# Project Structure
-```
-aws-s3-sync-automation/
-│
-├── src/
-│   └── s3_sync.py
-├── README.md
-├── LICENSE
-└── .gitignore
-```
+## Requirements
 
----
-
-# Requirements
 - Python 3.10+
 - AWS CLI configured using `aws configure`
-- IAM user with S3 upload permissions
+- IAM user with S3 read/write permissions (ListBucket, PutObject, DeleteObject)
 
 ---
 
-Author: Elif Cetin
+## Installation
+
+### Install AWS CLI
+https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
+
+### Verify installation
+```sh
+aws --version
+pip install boto3
+
+```
+## Usage
+```sh
+python src/s3_sync.py --local-path ./my-folder --bucket my-bucket --prefix backups/project --dry-run --verbose
+python src/s3_sync.py --local-path ./my-folder --bucket my-bucket --prefix backups/project
+python src/s3_sync.py --local-path ./my-folder --bucket my-bucket --delete
+```
+
+Author
+Elif Cetin
