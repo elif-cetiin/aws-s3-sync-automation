@@ -1,0 +1,15 @@
+{
+  "timestamp": "2025-11-16T14:22:10",
+  "local_path": "./my-folder",
+  "bucket": "my-bucket",
+  "prefix": "backups/project",
+  "uploaded_files": [
+    "report_2025.xlsx",
+    "notes.txt"
+  ],
+  "skipped_files": [
+    "config.json"
+  ],
+  "deleted_remote_files": [],
+  "status": "Sync completed successfully."
+}
