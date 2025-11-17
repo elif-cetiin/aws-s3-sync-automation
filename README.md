@@ -40,10 +40,6 @@ aws-s3-sync-automation/
 
 ---
 
-## Installation
-
-### Install AWS CLI
-https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
 
 ### Verify installation
 ```sh
@@ -58,5 +54,5 @@ python src/s3_sync.py --local-path ./my-folder --bucket my-bucket --prefix backu
 python src/s3_sync.py --local-path ./my-folder --bucket my-bucket --delete
 ```
 
-Author
+## Author
 Elif Cetin
